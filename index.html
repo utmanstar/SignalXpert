@@ -3,33 +3,43 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SignalXpert — Live Signals</title>
+<title>SignalXpert — Live Signals (Client)</title>
 <link rel="manifest" href="./manifest.json" />
 <meta name="theme-color" content="#061826" />
 <style>
-  :root{
-    --bg:#041422; --card:#07182a; --muted:#94a3b8; --accent:#00d1b2; --danger:#ff6b6b;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#041020 0%,#061826 100%);color:#e6eef6}
-  .wrap{max-width:1200px;margin:18px auto;padding:14px}
-  header{display:flex;justify-content:space-between;align-items:center;gap:12px}
-  h1{margin:0;font-size:20px}
-  .small{color:var(--muted);font-size:13px}
-  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  select,input,button{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
-  button.primary{background:var(--accent);color:#042024;border:none;font-weight:600}
-  main{display:grid;grid-template-columns:1fr 380px;gap:14px;margin-top:14px}
-  .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
-  #price{font-size:20px;font-weight:700;color:var(--accent)}
-  .signal{margin-top:12px;padding:12px;border-radius:10px;background:rgba(0,0,0,0.18)}
-  .chip{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02);font-size:13px}
-  .history-list{max-height:420px;overflow:auto;margin-top:8px}
-  .hist-item{padding:10px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,0.01);display:flex;justify-content:space-between;align-items:center}
-  .green{color:#6ee7b7} .red{color:#ff9b8a}
-  .row{display:flex;gap:8px;align-items:center}
-  .tp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
-  @media(max-width:980px){main{grid-template-columns:1fr} .controls{gap:6px}}
+/* -------------------------
+   Visual styles (single-file)
+   ------------------------- */
+:root{
+  --bg:#041322; --card:#071826; --muted:#94a3b8; --accent:#00d1b2; --danger:#ff6b6b;
+  --glass: rgba(255,255,255,0.03);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#03121a 0%,#04202a 100%);color:#e6eef6}
+.wrap{max-width:1200px;margin:18px auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{margin:0;font-size:20px}
+.small{color:var(--muted);font-size:13px}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+select,input,button{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+button.primary{background:var(--accent);color:#042024;border:none;font-weight:600}
+main{display:grid;grid-template-columns:1fr 380px;gap:14px;margin-top:14px}
+.card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+#price{font-size:20px;font-weight:700;color:var(--accent)}
+.signal{margin-top:12px;padding:12px;border-radius:10px;background:rgba(0,0,0,0.18)}
+.chip{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02);font-size:13px}
+.history-list{max-height:420px;overflow:auto;margin-top:8px}
+.hist-item{padding:10px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,0.01);display:flex;justify-content:space-between;align-items:center}
+.green{color:#6ee7b7} .red{color:#ff9b8a}
+.row{display:flex;gap:8px;align-items:center}
+.tp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+footer{margin-top:18px;color:var(--muted);font-size:13px}
+@media(max-width:980px){main{grid-template-columns:1fr} .controls{gap:6px}}
+/* small helpers */
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:6px 8px;border-radius:8px;color:var(--muted)}
+.kv{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.badge{padding:4px 8px;border-radius:6px;background:rgba(255,255,255,0.02);font-size:13px}
 </style>
 </head>
 <body>
@@ -37,9 +47,8 @@
     <header>
       <div>
         <h1>SignalXpert</h1>
-        <div class="small">Live signals — client-side, free. Contact: <strong>Khurram Irshad Khan</strong> • +92-3339719300 (WhatsApp)</div>
+        <div class="small">Live client-side signals — multi-exchange, AI-score, SMC, SMM. Contact: <strong>Khurram Irshad Khan</strong> • +92-3339719300 (WhatsApp)</div>
       </div>
-
       <div class="controls">
         <label class="small">Exchange</label>
         <select id="exchangeSelect">
@@ -52,7 +61,7 @@
 
         <label class="small">Pair</label>
         <select id="pairSelect">
-          <!-- expanded pair list -->
+          <!-- expanded list -->
           <option>BTC/USDT</option><option>ETH/USDT</option><option>BNB/USDT</option><option>ADA/USDT</option>
           <option>XRP/USDT</option><option>DOGE/USDT</option><option>SOL/USDT</option><option>DOT/USDT</option>
           <option>LTC/USDT</option><option>SUI/USDT</option><option>PI/USDT</option><option>WAVES/USDT</option>
@@ -121,7 +130,6 @@
               <button id="markSLBtn">Mark SL Hit</button>
             </div>
           </div>
-
         </div>
 
         <div class="card" style="margin-top:12px">
@@ -138,6 +146,7 @@
             <button id="clearHist">Clear History</button>
           </div>
         </div>
+
       </section>
 
       <aside>
@@ -174,40 +183,58 @@
     </footer>
   </div>
 
+<!-- -------------------------
+     Full JS — all-in-one
+     ------------------------- -->
 <script>
-/* -------------------------
-   Config & Utilities
-   ------------------------- */
-const STORAGE_KEY = "sx_signals_v3";
+/*
+  SignalXpert single-file JS
+  - Client-only: Binance websocket + REST polling for other exchanges
+  - CoinGecko candles for indicators
+  - SMC heuristics, ATR, EMA, RSI
+  - AI-style scoring (local, explainable)
+  - Multi-TP (6) + single-TP (Binance mode)
+  - SMM position sizing (balance & leverage)
+  - Local history in localStorage
+*/
+
+/* -------------
+   Config & state
+   ------------- */
+const STORAGE_KEY = "sx_signals_full_v1";
 let latestPrice = 0;
 let latestTs = 0;
-let activeWS = null;
+let ws = null;
+let pollingTimer = null;
 const pollingInterval = 5000; // 5s for non-ws exchanges
+
+// pair mapping for CoinGecko / exchanges
 const pairsMap = {
-  // same strings are used in UI: "BTC/USDT"
   "BTC/USDT":"BTCUSDT","ETH/USDT":"ETHUSDT","BNB/USDT":"BNBUSDT","ADA/USDT":"ADAUSDT","XRP/USDT":"XRPUSDT",
   "DOGE/USDT":"DOGEUSDT","SOL/USDT":"SOLUSDT","DOT/USDT":"DOTUSDT","LTC/USDT":"LTCUSDT","SUI/USDT":"SUIUSDT",
   "PI/USDT":"PIUSDT","WAVES/USDT":"WAVESUSDT","MATIC/USDT":"MATICUSDT","AVAX/USDT":"AVAXUSDT","SHIB/USDT":"SHIBUSDT",
   "APT/USDT":"APTUSDT","OP/USDT":"OPUSDT"
 };
 
-function showPrice(p){
+/* -------------
+   UI helpers
+   ------------- */
+function showPrice(p, ts){
   latestPrice = Number(p);
+  latestTs = ts || Date.now();
   document.getElementById("price").innerText = latestPrice.toFixed(6);
-  document.getElementById("priceTime").innerText = new Date().toLocaleTimeString();
+  document.getElementById("priceTime").innerText = new Date(latestTs).toLocaleTimeString();
 }
 function fmt(v,dec=6){ return Number(v).toFixed(dec); }
 
-/* -------------------------
-   Indicators & SMC (same heuristics we discussed)
-   ------------------------- */
+/* -------------
+   Indicators & SMC helpers
+   ------------- */
 function ema(values, period){
   if(values.length < period) return values[values.length-1] || 0;
   let k = 2/(period+1);
   let emaPrev = values.slice(0,period).reduce((a,b)=>a+b,0)/period;
-  for(let i=period;i<values.length;i++){
-    emaPrev = values[i]*k + emaPrev*(1-k);
-  }
+  for(let i=period;i<values.length;i++) emaPrev = values[i]*k + emaPrev*(1-k);
   return emaPrev;
 }
 function rsi(values, period=14){
@@ -216,29 +243,20 @@ function rsi(values, period=14){
   let gains = deltas.slice(0,period).filter(v=>v>0).reduce((a,b)=>a+b,0)/period;
   let losses = deltas.slice(0,period).filter(v=>v<0).map(v=>-v).reduce((a,b)=>a+b,0)/period;
   let avgGain=gains, avgLoss=losses;
-  for(let i=period;i<deltas.length;i++){
-    let d=deltas[i];
-    avgGain = (avgGain*(period-1) + (d>0?d:0))/period;
-    avgLoss = (avgLoss*(period-1) + (d<0?-d:0))/period;
-  }
+  for(let i=period;i<deltas.length;i++){ let d=deltas[i]; avgGain=(avgGain*(period-1)+(d>0?d:0))/period; avgLoss=(avgLoss*(period-1)+(d<0?-d:0))/period; }
   if(avgLoss===0) return 100;
-  let rs=avgGain/avgLoss;
-  return 100 - (100/(1+rs));
+  let rs=avgGain/avgLoss; return 100 - (100/(1+rs));
 }
 function atrFraction(candles, period=14){
   if(candles.length<=period) return 0.02;
   let trs=[];
-  for(let i=1;i<candles.length;i++){
-    const h=candles[i].h, l=candles[i].l, prev=candles[i-1].c;
-    const tr = Math.max(h-l, Math.abs(h-prev), Math.abs(l-prev));
-    trs.push(tr);
-  }
+  for(let i=1;i<candles.length;i++){ const h=candles[i].h, l=candles[i].l, prev=candles[i-1].c; const tr=Math.max(h-l, Math.abs(h-prev), Math.abs(l-prev)); trs.push(tr); }
   const atr = trs.slice(-period).reduce((a,b)=>a+b,0)/period;
   const lastClose = candles[candles.length-1].c || 1;
   return atr / lastClose;
 }
 
-// SMC utilities (same heuristics)
+/* SMC heuristics */
 function detectSwings(candles){
   let highs=[], lows=[];
   for(let i=2;i<candles.length-2;i++){
@@ -267,28 +285,13 @@ function findOrderBlocks(candles){
 }
 function obTouchedRecently(candles, ob, lookback=50){
   const start=Math.max(0,candles.length-lookback);
-  for(let i=start;i<candles.length;i++){
-    const c=candles[i];
-    if(c.l<=ob.high && c.h>=ob.low) return true;
-  }
+  for(let i=start;i<candles.length;i++){ const c=candles[i]; if(c.l<=ob.high && c.h>=ob.low) return true; }
   return false;
 }
 function detectLiquiditySweep(candles, highs, lows){
   const n=candles.length;
-  if(highs.length>0){
-    const h=candles[highs[highs.length-1]].h;
-    for(let i=Math.max(0,n-20);i<n;i++){
-      const c=candles[i];
-      if(c.h>h && c.c<h) return true;
-    }
-  }
-  if(lows.length>0){
-    const l=candles[lows[lows.length-1]].l;
-    for(let i=Math.max(0,n-20);i<n;i++){
-      const c=candles[i];
-      if(c.l<l && c.c>l) return true;
-    }
-  }
+  if(highs.length>0){ const h=candles[highs[highs.length-1]].h; for(let i=Math.max(0,n-20);i<n;i++){ const c=candles[i]; if(c.h>h && c.c<h) return true; } }
+  if(lows.length>0){ const l=candles[lows[lows.length-1]].l; for(let i=Math.max(0,n-20);i<n;i++){ const c=candles[i]; if(c.l<l && c.c>l) return true; } }
   return false;
 }
 function scoreSMC(candles, rsi=null, macdHist=null){
@@ -306,9 +309,9 @@ function scoreSMC(candles, rsi=null, macdHist=null){
   return {score: Math.max(0, Math.min(100, Math.round(score))), explanation: reasons.join("; ")};
 }
 
-/* -------------------------
+/* -------------
    Data & history helpers
-   ------------------------- */
+   ------------- */
 function saveSignalToLocal(sig){
   const arr = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   arr.unshift(sig);
@@ -316,7 +319,6 @@ function saveSignalToLocal(sig){
   renderSignals();
 }
 function loadHistory(){ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
-
 function renderSignals(){
   const arr = loadHistory();
   document.getElementById("histCount").innerText = arr.length;
@@ -333,51 +335,24 @@ function renderSignals(){
   }
   updateStats();
 }
-
-function exportJson(){
-  const data = loadHistory();
-  const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href=url; a.download="signals_history.json"; a.click();
-}
-function importJsonFile(file){
-  const reader = new FileReader();
-  reader.onload = (e)=>{
-    try{
-      const json = JSON.parse(e.target.result);
-      if(!Array.isArray(json)) throw new Error("Invalid JSON");
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(json.concat(loadHistory()).slice(0,2000)));
-      renderSignals(); alert("Imported.");
-    }catch(err){ alert("Invalid file"); }
-  };
-  reader.readAsText(file);
-}
+function exportJson(){ const data = loadHistory(); const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const url = URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="signals_history.json"; a.click(); }
+function importJsonFile(file){ const reader = new FileReader(); reader.onload = (e)=>{ try{ const json = JSON.parse(e.target.result); if(!Array.isArray(json)) throw new Error("Invalid JSON"); localStorage.setItem(STORAGE_KEY, JSON.stringify(json.concat(loadHistory()).slice(0,2000))); renderSignals(); alert("Imported."); }catch(err){ alert("Invalid file"); } }; reader.readAsText(file); }
 function clearHistory(){ if(confirm("Clear history?")){ localStorage.removeItem(STORAGE_KEY); renderSignals(); } }
 
-/* -------------------------
-   AI scoring helpers (free / explainable)
-   ------------------------- */
+/* -------------
+   AI scoring helpers
+   ------------- */
 async function fetchFearGreed(){
-  try{
-    const r = await fetch('https://api.alternative.me/fng/?limit=1');
-    const j = await r.json();
-    const v = j.data && j.data[0] && j.data[0].value ? parseInt(j.data[0].value) : 50;
-    return Math.max(0,Math.min(100,v));
-  }catch(e){ return 50; }
+  try{ const r = await fetch('https://api.alternative.me/fng/?limit=1'); const j = await r.json(); const v = j.data && j.data[0] && j.data[0].value ? parseInt(j.data[0].value) : 50; return Math.max(0,Math.min(100,v)); }catch(e){ return 50; }
 }
 function computeAIScore({ techScore, smcScore, atrFractionVal, fgVal, volChangePct }){
   const tech = Math.max(0,Math.min(100,techScore));
   const smc = Math.max(0,Math.min(100,smcScore));
   const fg  = Math.max(0,Math.min(100,fgVal||50));
   let volScore = 50;
-  if(atrFractionVal>0){
-    const ideal = 0.015;
-    const diff = Math.abs(atrFractionVal-ideal);
-    volScore = Math.max(0, Math.round(100 * Math.max(0, 1 - (diff / (ideal*2)))));
-  }
+  if(atrFractionVal>0){ const ideal=0.015; const diff=Math.abs(atrFractionVal-ideal); volScore = Math.max(0, Math.round(100 * Math.max(0, 1 - (diff/(ideal*2))))); }
   let volChangeScore = 50;
   if(typeof volChangePct === 'number'){ volChangeScore = Math.max(0, Math.min(100, Math.round(50 + (volChangePct*100)/2))); }
-
   const wTech=0.30, wSMC=0.25, wVol=0.15, wFG=0.10, wVolCh=0.10;
   let raw = tech*wTech + smc*wSMC + volScore*wVol + fg*wFG + volChangeScore*wVolCh;
   if(Math.abs(tech-smc)>40) raw -= 5;
@@ -386,9 +361,9 @@ function computeAIScore({ techScore, smcScore, atrFractionVal, fgVal, volChangeP
   return { score, explanation };
 }
 
-/* -------------------------
-   Candles (CoinGecko fallback) - returns array of {t,o,h,l,c}
-   ------------------------- */
+/* -------------
+   Candles (CoinGecko fallback)
+   ------------- */
 async function fetchCandlesCoinGecko(pair, days=3){
   const map = {BTCUSDT:"bitcoin", ETHUSDT:"ethereum", BNBUSDT:"binancecoin", ADAUSDT:"cardano", XRPUSDT:"ripple", DOGEUSDT:"dogecoin", SOLUSDT:"solana", DOTUSDT:"polkadot", LTCUSDT:"litecoin", SUIUSDT:"sui", PIUSDT:"pi-network", WAVESUSDT:"waves", MATICUSDT:"matic-network", AVAXUSDT:"avalanche-2", SHIBUSDT:"shiba-inu", APTUSDT:"aptos", OPUSDT:"optimism" };
   const coin = map[pair.toUpperCase()] || "bitcoin";
@@ -409,80 +384,54 @@ async function fetchCandlesCoinGecko(pair, days=3){
   }catch(e){ console.error("cg err",e); return []; }
 }
 
-/* -------------------------
-   Price fetchers per exchange
-   - Binance: websocket trade stream (fast)
-   - Others: REST polling (every pollingInterval ms) using public endpoints
-   ------------------------- */
-let pollingTimer = null;
-function stopPolling(){ if(pollingTimer) clearInterval(pollingTimer); pollingTimer = null; }
+/* -------------
+   Price fetchers
+   ------------- */
+function stopPolling(){ if(pollingTimer) clearInterval(pollingTimer); pollingTimer=null; }
 function startPolling(exchange, symbol){
   stopPolling();
   pollingTimer = setInterval(()=>fetchPriceREST(exchange, symbol), pollingInterval);
-  // immediate fetch once
   fetchPriceREST(exchange, symbol);
 }
-
 async function fetchPriceREST(exchange, symbol){
   try{
     symbol = symbol.replace("/","").toUpperCase();
     let url=null;
     if(exchange==="bybit") url = `https://api.bybit.com/v2/public/tickers?symbol=${symbol}`;
     else if(exchange==="kucoin") url = `https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=${symbol}`;
-    else if(exchange==="okx") {
-      // OKX uses lowercase with -USDT sometimes
-      url = `https://www.okx.com/api/v5/market/ticker?instId=${symbol}-USDT` ;
-    }
+    else if(exchange==="okx") url = `https://www.okx.com/api/v5/market/ticker?instId=${symbol}-USDT`;
     else if(exchange==="gate") url = `https://api.gateio.ws/api/v4/spot/tickers?currency_pair=${symbol}`;
     else url = `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`;
     if(!url) return;
     const r = await fetch(url);
     const j = await r.json();
     let price = null;
-    // normalize responses
-    if(exchange==="bybit"){
-      if(j && j.result && j.result.length) price = parseFloat(j.result[0].last_price) || parseFloat(j.result[0].lastPrice);
-    } else if(exchange==="kucoin"){
-      if(j && j.data && j.data.price) price = parseFloat(j.data.price);
-    } else if(exchange==="okx"){
-      if(j && j.data && j.data[0] && j.data[0].last) price = parseFloat(j.data[0].last) || parseFloat(j.data[0].last());
-      else if(j && j.data && j.data.last) price = parseFloat(j.data.last);
-    } else if(exchange==="gate"){
-      if(Array.isArray(j) && j.length) price = parseFloat(j[0].last);
-      else if(j && j.last) price = parseFloat(j.last);
-    } else {
-      if(j && j.price) price = parseFloat(j.price);
-      else if(j && j.lastPrice) price = parseFloat(j.lastPrice);
-    }
-    if(price) { showPrice(price); }
+    if(exchange==="bybit"){ if(j && j.result && j.result.length) price = parseFloat(j.result[0].last_price) || parseFloat(j.result[0].lastPrice); }
+    else if(exchange==="kucoin"){ if(j && j.data && j.data.price) price = parseFloat(j.data.price); }
+    else if(exchange==="okx"){ if(j && j.data && j.data[0] && j.data[0].last) price = parseFloat(j.data[0].last) || parseFloat(j.data[0].last()); else if(j && j.data && j.data.last) price = parseFloat(j.data.last); }
+    else if(exchange==="gate"){ if(Array.isArray(j) && j.length) price = parseFloat(j[0].last); else if(j && j.last) price = parseFloat(j.last); }
+    else { if(j && j.price) price = parseFloat(j.price); else if(j && j.lastPrice) price = parseFloat(j.lastPrice); }
+    if(price) showPrice(price);
   }catch(e){ console.warn("REST price err",e); }
 }
 
-/* -------------------------
-   WebSocket for Binance (fast)
-   ------------------------- */
-let ws = null;
+/* -------------
+   Binance websocket
+   ------------- */
 function connectBinanceWS(symbol){
-  try{ if(ws) { ws.close(); ws=null; } }catch(e){}
+  try{ if(ws){ ws.close(); ws=null; } }catch(e){}
   const stream = `${symbol.replace("/","").toLowerCase()}@trade`;
   const url = `wss://stream.binance.com:9443/ws/${stream}`;
   ws = new WebSocket(url);
   ws.onopen = ()=>{ document.getElementById("priceTime").innerText = "connected"; };
-  ws.onmessage = (ev)=>{
-    try{
-      const obj = JSON.parse(ev.data);
-      const p = parseFloat(obj.p);
-      const ts = obj.E || Date.now();
-      showPrice(p); latestTs = ts;
-    }catch(e){ console.error(e); }
-  };
+  ws.onmessage = (ev)=>{ try{ const obj = JSON.parse(ev.data); const p = parseFloat(obj.p); const ts = obj.E || Date.now(); showPrice(p, ts); }catch(e){ console.error(e); } };
   ws.onclose = ()=>{ document.getElementById("priceTime").innerText = "ws closed"; };
-  ws.onerror = (e)=>{ console.error("ws err",e); document.getElementById("priceTime").innerText = "ws error"; };
+  ws.onerror = (e)=>{ document.getElementById("priceTime").innerText = "ws error"; console.error("ws err",e); };
 }
 
-/* -------------------------
-   Core generator (advanced) using agreed parameters
-   ------------------------- */
+/* -------------
+   Generator: Advanced (agreed parameters)
+   ------------- */
 async function generateAdvancedSignal(){
   const exchange = document.getElementById("exchangeSelect").value;
   const pair = document.getElementById("pairSelect").value;
@@ -494,18 +443,17 @@ async function generateAdvancedSignal(){
   const riskPct = Number(document.getElementById("riskPct").value || 1.5);
   const binanceMode = document.getElementById("binanceMode").checked || (exchange==="binance");
 
-  // get candles for indicators
+  // candles for indicators (CoinGecko fallback)
   const candles = await fetchCandlesCoinGecko(symbol, 3);
   if(!candles.length){ alert("No candles (CoinGecko) — try again"); return; }
 
-  // calc indicators
   const closes = candles.map(c=>c.c);
   const emaShort = ema(closes,12), emaLong = ema(closes,26);
   const macdHist = emaShort-emaLong;
   const rsiVal = rsi(closes,14);
   const atrF = atrFraction(candles,14);
 
-  // detect SMC features
+  // SMC
   const smcObj = scoreSMC(candles, rsiVal, macdHist);
   const smcScore = smcObj.score;
 
@@ -516,28 +464,27 @@ async function generateAdvancedSignal(){
   techScore += (rsiVal<30 ? 6 : (rsiVal>70 ? -6 : 0));
   techScore = Math.max(0,Math.min(100,Math.round(techScore)));
 
-  // volume change proxy (price change over last buckets)
+  // vol-change proxy
   let volChangePct=0;
   try{ const last = closes[closes.length-1]; const prev = closes[Math.max(0,closes.length-4)]; volChangePct = prev?((last-prev)/prev):0; }catch(e){volChangePct=0;}
 
   // fear & greed
   const fgVal = await fetchFearGreed();
 
-  // AI score
+  // ai score
   const { score: aiScore, explanation: aiExplain } = computeAIScore({ techScore, smcScore, atrFractionVal:atrF, fgVal, volChangePct });
 
-  // direction decision
+  // direction
   const direction = (macdHist>0 && emaShort>emaLong) ? "LONG" : "SHORT";
 
-  // entry and SL (use SMC swing low/high if available)
-  const entry = latestPrice;
-  // find last swing low / high (simple)
+  // find last swing low/high for SL if possible
   let lastLow=null, lastHigh=null;
   for(let i=candles.length-4;i>=3;i--){
     if(!lastLow && candles[i].l < candles[i-1].l && candles[i].l < candles[i-2].l && candles[i].l < candles[i+1].l && candles[i].l < candles[i+2].l) lastLow = candles[i].l;
     if(!lastHigh && candles[i].h > candles[i-1].h && candles[i].h > candles[i-2].h && candles[i].h > candles[i+1].h && candles[i].h > candles[i+2].h) lastHigh = candles[i].h;
   }
 
+  const entry = latestPrice;
   let sl;
   if(direction==="LONG"){
     if(lastLow) sl = lastLow * 0.997; else sl = entry * (1 - Math.max(0.01, atrF*1.5));
@@ -547,7 +494,7 @@ async function generateAdvancedSignal(){
     if(sl <= entry) sl = entry * 1.01;
   }
 
-  // make multi TPs (6) based on ATR fraction progressive spacing
+  // multi-TP generation (6)
   const baseStep = Math.max((atrF || 0.01) * 0.9, 0.0025);
   const tpCount = 6;
   const tps = [];
@@ -557,7 +504,7 @@ async function generateAdvancedSignal(){
   }
   const finalTPs = binanceMode ? [tps[0]] : tps;
 
-  // SMM position sizing
+  // position sizing (SMM)
   const riskAmount = balance * (riskPct/100);
   const perUnitRisk = Math.abs(entry - sl);
   let qty = perUnitRisk>0 ? (riskAmount / perUnitRisk) : 0;
@@ -570,15 +517,16 @@ async function generateAdvancedSignal(){
     margin = leverage>0 ? notional / leverage : notional;
   }
 
-  // build signal object
+  // signal object
   const signal = {
     pair, exchange, direction, entry: Number(entry), tp: finalTPs.map(x=>Number(x)), sl: Number(sl),
-    ai_score: aiScore, ai_explanation: aiExplain, tech_score: techScore, smc_score: smcScore, confidence: Math.round((aiScore*0.7 + techScore*0.2 + smcScore*0.1)),
+    ai_score: aiScore, ai_explanation: aiExplain, tech_score: techScore, smc_score: smcScore,
+    confidence: Math.round((aiScore*0.7 + techScore*0.2 + smcScore*0.1)),
     atr_fraction: Number(atrF.toFixed(6)), vol_change_pct: Number(volChangePct.toFixed(6)), fg_index: fgVal,
     balance, leverage, risk_pct: riskPct, qty: Number(qty||0), margin: Number(margin||0), ts: Date.now(), result:"open"
   };
 
-  // show card
+  // show UI
   document.getElementById("signalCard").style.display="block";
   document.getElementById("sigPair").innerText = `${signal.pair} • ${signal.exchange}`;
   document.getElementById("sigDir").innerText = signal.direction;
@@ -594,30 +542,20 @@ async function generateAdvancedSignal(){
   const tpGrid = document.getElementById("sigTPs"); tpGrid.innerHTML="";
   signal.tp.forEach((t,i)=>{ const d = document.createElement("div"); const pct = ((t - signal.entry)/signal.entry*100).toFixed(2); d.innerHTML = `<strong>TP${i+1}</strong> ${t.toFixed(6)} <span class="small">(${pct}%)</span>`; tpGrid.appendChild(d); });
 
-  // preview
   window.previewSignal = signal;
 }
 
-/* -------------------------
-   UI wiring: buttons
-   ------------------------- */
+/* -------------
+   UI wiring
+   ------------- */
 document.getElementById("subscribeBtn").addEventListener("click", ()=>{
   const exchange = document.getElementById("exchangeSelect").value;
   const pair = document.getElementById("pairSelect").value;
   document.getElementById("pairTitle").innerText = `${pair} • ${exchange}`;
-  // If Binance and pair exists on Binance -> use WS
   const symbol = pairsMap[pair] || pair.replace("/","").toUpperCase();
-  if(exchange==="binance"){
-    try{ if(activeWS) { activeWS.close(); activeWS=null; } }catch(e){}
-    connectBinanceWS(symbol);
-    stopPolling();
-  } else {
-    // use polling REST for other exchanges
-    if(activeWS){ try{ activeWS.close(); activeWS=null; }catch(e){} }
-    startPolling(exchange, symbol);
-  }
-  // refresh FG, etc.
-  fetchFearGreed().then(v=>document.getElementById("fg").innerText = v).catch(()=>document.getElementById("fg").innerText="n/a");
+  if(exchange==="binance"){ try{ if(ws) { ws.close(); ws=null; } }catch(e){} connectBinanceWS(symbol); stopPolling(); }
+  else { if(ws){ try{ ws.close(); ws=null; }catch(e){} } startPolling(exchange, symbol); }
+  fetchFearGreed().then(v=>document.getElementById("fg").innerText=v).catch(()=>document.getElementById("fg").innerText="n/a");
 });
 
 document.getElementById("genAdvancedBtn").addEventListener("click", ()=> generateAdvancedSignal());
@@ -636,9 +574,9 @@ document.getElementById("exportJson").addEventListener("click", exportJson);
 document.getElementById("clearHist").addEventListener("click", clearHistory);
 document.getElementById("importJsonBtn").addEventListener("click", ()=>{ const inp=document.createElement("input"); inp.type="file"; inp.accept=".json"; inp.onchange=()=>{ const f = inp.files[0]; if(f) importJsonFile(f); }; inp.click(); });
 
-/* -------------------------
+/* -------------
    Stats
-   ------------------------- */
+   ------------- */
 function updateStats(){
   const hist = loadHistory();
   const now = Date.now();
@@ -656,21 +594,18 @@ function updateStats(){
   document.getElementById("statPL").innerText = totalPL.toFixed(2);
 }
 
-/* -------------------------
-   Init & PWA sw registration
-   ------------------------- */
+/* -------------
+   Init & PWA register
+   ------------- */
 (function init(){
   renderSignals();
-  // default subscribe
   const defaultPair = document.getElementById("pairSelect").value;
   document.getElementById("pairTitle").innerText = `${defaultPair} • Binance`;
   connectBinanceWS(pairsMap[defaultPair] || defaultPair.replace("/","").toLowerCase());
   fetchFearGreed().then(v=>document.getElementById("fg").innerText=v).catch(()=>document.getElementById("fg").innerText="n/a");
   setInterval(()=>fetchFearGreed().then(v=>document.getElementById("fg").innerText=v).catch(()=>{}), 30*60*1000);
 })();
-
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('./service-worker.js').then(()=>console.log("sw registered")).catch(e=>console.warn("sw failed",e)); }
-
 </script>
 </body>
 </html>
