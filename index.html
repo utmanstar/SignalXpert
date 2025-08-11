@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SignalXpert — Live Signals (Client)</title>
+<title>SignalXpert — Live Signals (All-in-one)</title>
 <link rel="manifest" href="./manifest.json" />
 <meta name="theme-color" content="#061826" />
 <style>
-/* -------------------------
-   Visual styles (single-file)
-   ------------------------- */
+/* =====================
+   SignalXpert - styles
+   ===================== */
 :root{
   --bg:#041322; --card:#071826; --muted:#94a3b8; --accent:#00d1b2; --danger:#ff6b6b;
   --glass: rgba(255,255,255,0.03);
@@ -35,11 +35,9 @@ main{display:grid;grid-template-columns:1fr 380px;gap:14px;margin-top:14px}
 .row{display:flex;gap:8px;align-items:center}
 .tp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
 footer{margin-top:18px;color:var(--muted);font-size:13px}
-@media(max-width:980px){main{grid-template-columns:1fr} .controls{gap:6px}}
-/* small helpers */
-.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:6px 8px;border-radius:8px;color:var(--muted)}
 .kv{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
 .badge{padding:4px 8px;border-radius:6px;background:rgba(255,255,255,0.02);font-size:13px}
+@media(max-width:980px){main{grid-template-columns:1fr} .controls{gap:6px}}
 </style>
 </head>
 <body>
@@ -49,6 +47,7 @@ footer{margin-top:18px;color:var(--muted);font-size:13px}
         <h1>SignalXpert</h1>
         <div class="small">Live client-side signals — multi-exchange, AI-score, SMC, SMM. Contact: <strong>Khurram Irshad Khan</strong> • +92-3339719300 (WhatsApp)</div>
       </div>
+
       <div class="controls">
         <label class="small">Exchange</label>
         <select id="exchangeSelect">
@@ -183,32 +182,47 @@ footer{margin-top:18px;color:var(--muted);font-size:13px}
     </footer>
   </div>
 
-<!-- -------------------------
-     Full JS — all-in-one
-     ------------------------- -->
+<!-- ===========================
+     Inlined Signals JSON (editable)
+     =========================== -->
 <script>
 /*
-  SignalXpert single-file JS
-  - Client-only: Binance websocket + REST polling for other exchanges
-  - CoinGecko candles for indicators
-  - SMC heuristics, ATR, EMA, RSI
-  - AI-style scoring (local, explainable)
-  - Multi-TP (6) + single-TP (Binance mode)
-  - SMM position sizing (balance & leverage)
-  - Local history in localStorage
+  PRESET_SIGNALS:
+  Edit these if you want pre-defined signals visible in the app.
+  This is optional — the generator will create live signals based on market data.
 */
+const PRESET_SIGNALS = [
+  {"pair":"BTC/USDT","exchange":"Binance","direction":"LONG","entry":62500,"targets":[63000,63550,64100,65000],"stopLoss":61500,"aiScore":92},
+  {"pair":"ETH/USDT","exchange":"Bybit","direction":"SHORT","entry":4450,"targets":[4400,4350,4300],"stopLoss":4520,"aiScore":88},
+  {"pair":"WAVES/USDT","exchange":"Bybit","direction":"LONG","entry":1.1698,"targets":[1.1815,1.1932,1.2049,1.2165],"stopLoss":1.0528,"aiScore":90}
+];
+</script>
+
+<!-- ===========================
+     Full JS logic
+     =========================== -->
+<script>
+/* =========================================================================
+   SignalXpert - All-in-one JS
+   - Live websocket for Binance
+   - REST polling for Bybit/KuCoin/OKX/Gate
+   - CoinGecko candles for indicators
+   - SMC heuristics + ATR + EMA + RSI
+   - AI-style explainable score
+   - SMM position sizing
+   - Local history (localStorage) + export/import
+   ========================================================================= */
 
 /* -------------
    Config & state
    ------------- */
-const STORAGE_KEY = "sx_signals_full_v1";
+const STORAGE_KEY = "sx_signals_full_v2";
 let latestPrice = 0;
 let latestTs = 0;
 let ws = null;
 let pollingTimer = null;
-const pollingInterval = 5000; // 5s for non-ws exchanges
+const pollingInterval = 5000; // 5s for REST exchanges
 
-// pair mapping for CoinGecko / exchanges
 const pairsMap = {
   "BTC/USDT":"BTCUSDT","ETH/USDT":"ETHUSDT","BNB/USDT":"BNBUSDT","ADA/USDT":"ADAUSDT","XRP/USDT":"XRPUSDT",
   "DOGE/USDT":"DOGEUSDT","SOL/USDT":"SOLUSDT","DOT/USDT":"DOTUSDT","LTC/USDT":"LTCUSDT","SUI/USDT":"SUIUSDT",
@@ -340,7 +354,7 @@ function importJsonFile(file){ const reader = new FileReader(); reader.onload = 
 function clearHistory(){ if(confirm("Clear history?")){ localStorage.removeItem(STORAGE_KEY); renderSignals(); } }
 
 /* -------------
-   AI scoring helpers
+   AI scoring helpers (explainable)
    ------------- */
 async function fetchFearGreed(){
   try{ const r = await fetch('https://api.alternative.me/fng/?limit=1'); const j = await r.json(); const v = j.data && j.data[0] && j.data[0].value ? parseInt(j.data[0].value) : 50; return Math.max(0,Math.min(100,v)); }catch(e){ return 50; }
@@ -363,7 +377,9 @@ function computeAIScore({ techScore, smcScore, atrFractionVal, fgVal, volChangeP
 
 /* -------------
    Candles (CoinGecko fallback)
-   ------------- */
+   -------------
+   Returns array of {t,o,h,l,c}
+*/
 async function fetchCandlesCoinGecko(pair, days=3){
   const map = {BTCUSDT:"bitcoin", ETHUSDT:"ethereum", BNBUSDT:"binancecoin", ADAUSDT:"cardano", XRPUSDT:"ripple", DOGEUSDT:"dogecoin", SOLUSDT:"solana", DOTUSDT:"polkadot", LTCUSDT:"litecoin", SUIUSDT:"sui", PIUSDT:"pi-network", WAVESUSDT:"waves", MATICUSDT:"matic-network", AVAXUSDT:"avalanche-2", SHIBUSDT:"shiba-inu", APTUSDT:"aptos", OPUSDT:"optimism" };
   const coin = map[pair.toUpperCase()] || "bitcoin";
@@ -385,14 +401,10 @@ async function fetchCandlesCoinGecko(pair, days=3){
 }
 
 /* -------------
-   Price fetchers
+   Price fetchers & websockets
    ------------- */
 function stopPolling(){ if(pollingTimer) clearInterval(pollingTimer); pollingTimer=null; }
-function startPolling(exchange, symbol){
-  stopPolling();
-  pollingTimer = setInterval(()=>fetchPriceREST(exchange, symbol), pollingInterval);
-  fetchPriceREST(exchange, symbol);
-}
+function startPolling(exchange, symbol){ stopPolling(); pollingTimer = setInterval(()=>fetchPriceREST(exchange, symbol), pollingInterval); fetchPriceREST(exchange, symbol); }
 async function fetchPriceREST(exchange, symbol){
   try{
     symbol = symbol.replace("/","").toUpperCase();
@@ -415,9 +427,6 @@ async function fetchPriceREST(exchange, symbol){
   }catch(e){ console.warn("REST price err",e); }
 }
 
-/* -------------
-   Binance websocket
-   ------------- */
 function connectBinanceWS(symbol){
   try{ if(ws){ ws.close(); ws=null; } }catch(e){}
   const stream = `${symbol.replace("/","").toLowerCase()}@trade`;
@@ -430,7 +439,7 @@ function connectBinanceWS(symbol){
 }
 
 /* -------------
-   Generator: Advanced (agreed parameters)
+   Advanced generator (agreed parameters)
    ------------- */
 async function generateAdvancedSignal(){
   const exchange = document.getElementById("exchangeSelect").value;
@@ -443,7 +452,7 @@ async function generateAdvancedSignal(){
   const riskPct = Number(document.getElementById("riskPct").value || 1.5);
   const binanceMode = document.getElementById("binanceMode").checked || (exchange==="binance");
 
-  // candles for indicators (CoinGecko fallback)
+  // candles
   const candles = await fetchCandlesCoinGecko(symbol, 3);
   if(!candles.length){ alert("No candles (CoinGecko) — try again"); return; }
 
@@ -477,7 +486,7 @@ async function generateAdvancedSignal(){
   // direction
   const direction = (macdHist>0 && emaShort>emaLong) ? "LONG" : "SHORT";
 
-  // find last swing low/high for SL if possible
+  // last swing low/high
   let lastLow=null, lastHigh=null;
   for(let i=candles.length-4;i>=3;i--){
     if(!lastLow && candles[i].l < candles[i-1].l && candles[i].l < candles[i-2].l && candles[i].l < candles[i+1].l && candles[i].l < candles[i+2].l) lastLow = candles[i].l;
@@ -494,7 +503,7 @@ async function generateAdvancedSignal(){
     if(sl <= entry) sl = entry * 1.01;
   }
 
-  // multi-TP generation (6)
+  // multi-TP
   const baseStep = Math.max((atrF || 0.01) * 0.9, 0.0025);
   const tpCount = 6;
   const tps = [];
@@ -517,7 +526,7 @@ async function generateAdvancedSignal(){
     margin = leverage>0 ? notional / leverage : notional;
   }
 
-  // signal object
+  // build signal
   const signal = {
     pair, exchange, direction, entry: Number(entry), tp: finalTPs.map(x=>Number(x)), sl: Number(sl),
     ai_score: aiScore, ai_explanation: aiExplain, tech_score: techScore, smc_score: smcScore,
@@ -526,7 +535,7 @@ async function generateAdvancedSignal(){
     balance, leverage, risk_pct: riskPct, qty: Number(qty||0), margin: Number(margin||0), ts: Date.now(), result:"open"
   };
 
-  // show UI
+  // display
   document.getElementById("signalCard").style.display="block";
   document.getElementById("sigPair").innerText = `${signal.pair} • ${signal.exchange}`;
   document.getElementById("sigDir").innerText = signal.direction;
@@ -542,11 +551,12 @@ async function generateAdvancedSignal(){
   const tpGrid = document.getElementById("sigTPs"); tpGrid.innerHTML="";
   signal.tp.forEach((t,i)=>{ const d = document.createElement("div"); const pct = ((t - signal.entry)/signal.entry*100).toFixed(2); d.innerHTML = `<strong>TP${i+1}</strong> ${t.toFixed(6)} <span class="small">(${pct}%)</span>`; tpGrid.appendChild(d); });
 
+  // keep preview
   window.previewSignal = signal;
 }
 
 /* -------------
-   UI wiring
+   Wiring: UI buttons
    ------------- */
 document.getElementById("subscribeBtn").addEventListener("click", ()=>{
   const exchange = document.getElementById("exchangeSelect").value;
@@ -598,14 +608,29 @@ function updateStats(){
    Init & PWA register
    ------------- */
 (function init(){
+  // load presets into history so user sees them (optional)
+  const existing = loadHistory();
+  if(existing.length===0 && PRESET_SIGNALS && PRESET_SIGNALS.length){
+    const now = Date.now();
+    const mapped = PRESET_SIGNALS.map(s=>({...s, ts: now, result:"open"}));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
+  }
   renderSignals();
+
+  // default subscribe to first pair (Binance)
   const defaultPair = document.getElementById("pairSelect").value;
   document.getElementById("pairTitle").innerText = `${defaultPair} • Binance`;
   connectBinanceWS(pairsMap[defaultPair] || defaultPair.replace("/","").toLowerCase());
+
   fetchFearGreed().then(v=>document.getElementById("fg").innerText=v).catch(()=>document.getElementById("fg").innerText="n/a");
   setInterval(()=>fetchFearGreed().then(v=>document.getElementById("fg").innerText=v).catch(()=>{}), 30*60*1000);
 })();
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('./service-worker.js').then(()=>console.log("sw registered")).catch(e=>console.warn("sw failed",e)); }
+
+// register service worker if present
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./service-worker.js').then(()=>console.log("sw registered")).catch((e)=>console.warn("sw failed",e));
+}
+
 </script>
 </body>
 </html>
