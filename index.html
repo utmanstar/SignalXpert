@@ -1,636 +1,102 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SignalXpert — Live Signals (All-in-one)</title>
-<link rel="manifest" href="./manifest.json" />
-<meta name="theme-color" content="#061826" />
-<style>
-/* =====================
-   SignalXpert - styles
-   ===================== */
-:root{
-  --bg:#041322; --card:#071826; --muted:#94a3b8; --accent:#00d1b2; --danger:#ff6b6b;
-  --glass: rgba(255,255,255,0.03);
-}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#03121a 0%,#04202a 100%);color:#e6eef6}
-.wrap{max-width:1200px;margin:18px auto;padding:16px}
-header{display:flex;justify-content:space-between;align-items:center;gap:12px}
-h1{margin:0;font-size:20px}
-.small{color:var(--muted);font-size:13px}
-.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-select,input,button{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
-button.primary{background:var(--accent);color:#042024;border:none;font-weight:600}
-main{display:grid;grid-template-columns:1fr 380px;gap:14px;margin-top:14px}
-.card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
-#price{font-size:20px;font-weight:700;color:var(--accent)}
-.signal{margin-top:12px;padding:12px;border-radius:10px;background:rgba(0,0,0,0.18)}
-.chip{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02);font-size:13px}
-.history-list{max-height:420px;overflow:auto;margin-top:8px}
-.hist-item{padding:10px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,0.01);display:flex;justify-content:space-between;align-items:center}
-.green{color:#6ee7b7} .red{color:#ff9b8a}
-.row{display:flex;gap:8px;align-items:center}
-.tp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
-footer{margin-top:18px;color:var(--muted);font-size:13px}
-.kv{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
-.badge{padding:4px 8px;border-radius:6px;background:rgba(255,255,255,0.02);font-size:13px}
-@media(max-width:980px){main{grid-template-columns:1fr} .controls{gap:6px}}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SignalXpert — Live Crypto Signals</title>
+  <meta name="description" content="Live crypto signals with AI score, risk controls, and Binance prices." />
+  <link rel="preconnect" href="https://api.binance.com" crossorigin />
+  <link rel="preconnect" href="https://api.alternative.me" crossorigin />
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Modern, clean UI font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+
+  <!-- Favicons are optional -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%2300E396'/%3E%3Cpath d='M22 40 L32 18 L42 40' stroke='%2300192F' stroke-width='4' fill='none'/%3E%3C/svg%3E">
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo-dot"></div>
+      <div class="brand-text">
         <h1>SignalXpert</h1>
-        <div class="small">Live client-side signals — multi-exchange, AI-score, SMC, SMM. Contact: <strong>Khurram Irshad Khan</strong> • +92-3339719300 (WhatsApp)</div>
+        <p class="tagline">Built for winning trades</p>
+      </div>
+    </div>
+
+    <div class="right-controls">
+      <select id="exchangeSelect" class="select">
+        <option value="binance" selected>Binance (Spot)</option>
+        <option value="binance-futures">Binance (USD-M Futures)</option>
+        <!-- You can add Bybit here later -->
+      </select>
+      <button id="refreshBtn" class="btn primary">Generate / Refresh</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Status Row -->
+    <section class="status-row">
+      <div class="panel fg-panel">
+        <div class="panel-header">
+          <span>Fear & Greed Index</span>
+          <button id="refreshFG" class="btn ghost sm">Refresh</button>
+        </div>
+        <div class="fg-wrap">
+          <div class="fg-gauge">
+            <div id="fgNeedle" class="fg-needle"></div>
+          </div>
+          <div class="fg-info">
+            <div class="fg-score"><span id="fgValue">–</span> / 100</div>
+            <div class="fg-label" id="fgLabel">Loading…</div>
+            <div class="fg-updated" id="fgUpdated">—</div>
+          </div>
+        </div>
       </div>
 
-      <div class="controls">
-        <label class="small">Exchange</label>
-        <select id="exchangeSelect">
-          <option value="binance">Binance</option>
-          <option value="bybit">Bybit</option>
-          <option value="kucoin">KuCoin</option>
-          <option value="okx">OKX</option>
-          <option value="gate">Gate</option>
-        </select>
-
-        <label class="small">Pair</label>
-        <select id="pairSelect">
-          <!-- expanded list -->
-          <option>BTC/USDT</option><option>ETH/USDT</option><option>BNB/USDT</option><option>ADA/USDT</option>
-          <option>XRP/USDT</option><option>DOGE/USDT</option><option>SOL/USDT</option><option>DOT/USDT</option>
-          <option>LTC/USDT</option><option>SUI/USDT</option><option>PI/USDT</option><option>WAVES/USDT</option>
-          <option>MATIC/USDT</option><option>AVAX/USDT</option><option>SHIB/USDT</option><option>APT/USDT</option>
-          <option>OP/USDT</option>
-        </select>
-
-        <button id="subscribeBtn" class="primary">Subscribe</button>
+      <div class="panel kpis">
+        <div class="kpi">
+          <div class="kpi-label">Signals (Open)</div>
+          <div class="kpi-value" id="kpiOpen">0</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Avg AI Score</div>
+          <div class="kpi-value" id="kpiAi">–</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Updated</div>
+          <div class="kpi-value" id="kpiUpdated">—</div>
+        </div>
       </div>
-    </header>
+    </section>
 
-    <main>
-      <section>
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-            <div>
-              <div id="pairTitle">—</div>
-              <div id="price" style="margin-top:8px">—</div>
-              <div class="small" id="priceTime">waiting for feed...</div>
-            </div>
+    <!-- Filters -->
+    <section class="filters">
+      <input id="searchInput" class="input" placeholder="Search pair (e.g. BTC/USDT)..." />
+      <select id="sideFilter" class="select">
+        <option value="">All Directions</option>
+        <option value="LONG">Long</option>
+        <option value="SHORT">Short</option>
+      </select>
+      <select id="statusFilter" class="select">
+        <option value="">All Status</option>
+        <option value="Open">Open</option>
+        <option value="Closed">Closed</option>
+      </select>
+      <button id="clearFilters" class="btn ghost">Clear</button>
+    </section>
 
-            <div style="text-align:right; min-width:200px">
-              <div class="small">Fear & Greed</div>
-              <div id="fg" style="font-weight:700">—</div>
-              <div style="height:8px"></div>
-              <div class="small">Defaults</div>
-              <div class="small">Balance: <input id="acctBalance" type="number" value="50" style="width:90px"/></div>
-              <div class="small">Leverage: <input id="leverage" type="number" value="5" style="width:60px"/></div>
-            </div>
-          </div>
+    <!-- Signals list -->
+    <section id="signalsList" class="grid"></section>
 
-          <div style="margin-top:12px" class="row">
-            <button id="genAdvancedBtn">Generate Advanced Signal</button>
-            <button id="genBasicBtn">Quick Signal</button>
-            <div style="flex:1"></div>
-            <label class="small">Risk %</label>
-            <input id="riskPct" type="number" value="1.5" style="width:70px"/>
-            <label class="small">Binance mode (1TP)</label>
-            <input id="binanceMode" type="checkbox"/>
-          </div>
-
-          <div id="signalCard" class="signal" style="display:none">
-            <div class="row" style="justify-content:space-between">
-              <div><strong id="sigPair">—</strong> <span id="sigDir" class="small"></span></div>
-              <div><span class="small">Confidence</span> <strong id="sigConf">0</strong>%</div>
-            </div>
-
-            <div style="margin-top:8px">
-              <div class="small">Entry: <strong id="sigEntry"></strong></div>
-              <div class="small">SL: <strong id="sigSL"></strong></div>
-              <div class="small">TPs:</div>
-              <div class="tp-grid" id="sigTPs"></div>
-            </div>
-
-            <div style="margin-top:10px" class="row">
-              <div class="chip">AI: <span id="aiScore">-</span></div>
-              <div class="chip">Tech: <span id="techScore">-</span></div>
-              <div class="chip">SMC: <span id="smcScore">-</span></div>
-              <div class="chip">ATRf: <span id="atrVal">-</span></div>
-            </div>
-
-            <div style="margin-top:8px" id="sigExplain" class="small"></div>
-            <div style="margin-top:10px" class="row">
-              <button id="saveSigBtn">Save to History</button>
-              <button id="markTPBtn">Mark TP Hit</button>
-              <button id="markSLBtn">Mark SL Hit</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <strong>Signal History</strong>
-            <div class="small">Count: <span id="histCount">0</span></div>
-          </div>
-
-          <div class="history-list" id="historyList"></div>
-
-          <div style="margin-top:8px;display:flex;gap:8px">
-            <button id="exportJson">Export JSON</button>
-            <button id="importJsonBtn">Import JSON</button>
-            <button id="clearHist">Clear History</button>
-          </div>
-        </div>
-
-      </section>
-
-      <aside>
-        <div class="card">
-          <strong>Quick Stats</strong>
-          <div style="margin-top:10px" class="small">Last 7 days</div>
-          <div style="margin-top:8px">
-            <div class="row"><div>Total trades</div><div id="statTotal">0</div></div>
-            <div class="row"><div>Wins</div><div id="statWins">0</div></div>
-            <div class="row"><div>Losses</div><div id="statLoss">0</div></div>
-            <div class="row"><div>Win rate</div><div id="statWR">0%</div></div>
-            <div class="row"><div>Total P/L (USDT)</div><div id="statPL">0.00</div></div>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <strong>Settings</strong>
-          <div style="margin-top:8px" class="small">SMC weight (0-100)</div>
-          <input id="smcWeight" type="number" value="35" style="width:80px"/>
-          <div style="margin-top:8px" class="small">AI weight (0-100)</div>
-          <input id="aiWeight" type="number" value="60" style="width:80px"/>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <strong>Contact</strong>
-          <div style="margin-top:8px" class="small">Khurram Irshad Khan</div>
-          <div class="small">+92-3339719300 (WhatsApp)</div>
-        </div>
-      </aside>
-    </main>
-
-    <footer>
-      <div class="small">Client-only version — everything runs in your browser. For higher fidelity use a backend later.</div>
+    <!-- Footer -->
+    <footer class="footer">
+      <div>© <span id="year"></span> SignalXpert — Live crypto signals with AI-backed analysis.</div>
+      <div>Contact: Khurram Irshad Khan — WhatsApp/Phone: +92-333-9719300</div>
     </footer>
-  </div>
+  </main>
 
-<!-- ===========================
-     Inlined Signals JSON (editable)
-     =========================== -->
-<script>
-/*
-  PRESET_SIGNALS:
-  Edit these if you want pre-defined signals visible in the app.
-  This is optional — the generator will create live signals based on market data.
-*/
-const PRESET_SIGNALS = [
-  {"pair":"BTC/USDT","exchange":"Binance","direction":"LONG","entry":62500,"targets":[63000,63550,64100,65000],"stopLoss":61500,"aiScore":92},
-  {"pair":"ETH/USDT","exchange":"Bybit","direction":"SHORT","entry":4450,"targets":[4400,4350,4300],"stopLoss":4520,"aiScore":88},
-  {"pair":"WAVES/USDT","exchange":"Bybit","direction":"LONG","entry":1.1698,"targets":[1.1815,1.1932,1.2049,1.2165],"stopLoss":1.0528,"aiScore":90}
-];
-</script>
-
-<!-- ===========================
-     Full JS logic
-     =========================== -->
-<script>
-/* =========================================================================
-   SignalXpert - All-in-one JS
-   - Live websocket for Binance
-   - REST polling for Bybit/KuCoin/OKX/Gate
-   - CoinGecko candles for indicators
-   - SMC heuristics + ATR + EMA + RSI
-   - AI-style explainable score
-   - SMM position sizing
-   - Local history (localStorage) + export/import
-   ========================================================================= */
-
-/* -------------
-   Config & state
-   ------------- */
-const STORAGE_KEY = "sx_signals_full_v2";
-let latestPrice = 0;
-let latestTs = 0;
-let ws = null;
-let pollingTimer = null;
-const pollingInterval = 5000; // 5s for REST exchanges
-
-const pairsMap = {
-  "BTC/USDT":"BTCUSDT","ETH/USDT":"ETHUSDT","BNB/USDT":"BNBUSDT","ADA/USDT":"ADAUSDT","XRP/USDT":"XRPUSDT",
-  "DOGE/USDT":"DOGEUSDT","SOL/USDT":"SOLUSDT","DOT/USDT":"DOTUSDT","LTC/USDT":"LTCUSDT","SUI/USDT":"SUIUSDT",
-  "PI/USDT":"PIUSDT","WAVES/USDT":"WAVESUSDT","MATIC/USDT":"MATICUSDT","AVAX/USDT":"AVAXUSDT","SHIB/USDT":"SHIBUSDT",
-  "APT/USDT":"APTUSDT","OP/USDT":"OPUSDT"
-};
-
-/* -------------
-   UI helpers
-   ------------- */
-function showPrice(p, ts){
-  latestPrice = Number(p);
-  latestTs = ts || Date.now();
-  document.getElementById("price").innerText = latestPrice.toFixed(6);
-  document.getElementById("priceTime").innerText = new Date(latestTs).toLocaleTimeString();
-}
-function fmt(v,dec=6){ return Number(v).toFixed(dec); }
-
-/* -------------
-   Indicators & SMC helpers
-   ------------- */
-function ema(values, period){
-  if(values.length < period) return values[values.length-1] || 0;
-  let k = 2/(period+1);
-  let emaPrev = values.slice(0,period).reduce((a,b)=>a+b,0)/period;
-  for(let i=period;i<values.length;i++) emaPrev = values[i]*k + emaPrev*(1-k);
-  return emaPrev;
-}
-function rsi(values, period=14){
-  if(values.length <= period) return 50;
-  let deltas=[]; for(let i=1;i<values.length;i++) deltas.push(values[i]-values[i-1]);
-  let gains = deltas.slice(0,period).filter(v=>v>0).reduce((a,b)=>a+b,0)/period;
-  let losses = deltas.slice(0,period).filter(v=>v<0).map(v=>-v).reduce((a,b)=>a+b,0)/period;
-  let avgGain=gains, avgLoss=losses;
-  for(let i=period;i<deltas.length;i++){ let d=deltas[i]; avgGain=(avgGain*(period-1)+(d>0?d:0))/period; avgLoss=(avgLoss*(period-1)+(d<0?-d:0))/period; }
-  if(avgLoss===0) return 100;
-  let rs=avgGain/avgLoss; return 100 - (100/(1+rs));
-}
-function atrFraction(candles, period=14){
-  if(candles.length<=period) return 0.02;
-  let trs=[];
-  for(let i=1;i<candles.length;i++){ const h=candles[i].h, l=candles[i].l, prev=candles[i-1].c; const tr=Math.max(h-l, Math.abs(h-prev), Math.abs(l-prev)); trs.push(tr); }
-  const atr = trs.slice(-period).reduce((a,b)=>a+b,0)/period;
-  const lastClose = candles[candles.length-1].c || 1;
-  return atr / lastClose;
-}
-
-/* SMC heuristics */
-function detectSwings(candles){
-  let highs=[], lows=[];
-  for(let i=2;i<candles.length-2;i++){
-    const h=candles[i].h, l=candles[i].l;
-    if(h>candles[i-1].h && h>candles[i-2].h && h>candles[i+1].h && h>candles[i+2].h) highs.push(i);
-    if(l<candles[i-1].l && l<candles[i-2].l && l<candles[i+1].l && l<candles[i+2].l) lows.push(i);
-  }
-  return {highs,lows};
-}
-function detectBOS(candles, highs, lows){
-  if(highs.length===0||lows.length===0) return {bosBull:false,bosBear:false};
-  const lastH = candles[highs[highs.length-1]].h;
-  const lastL = candles[lows[lows.length-1]].l;
-  const close = candles[candles.length-1].c;
-  const buf=(lastH-lastL)*0.001;
-  return {bosBull: close > lastH+buf, bosBear: close < lastL-buf};
-}
-function findOrderBlocks(candles){
-  let obs=[];
-  for(let i=candles.length-1;i>=2 && obs.length<6;i--){
-    const cur=candles[i], prev=candles[i-1];
-    if(prev.c>prev.o && cur.c<cur.o && cur.c<prev.c) obs.push({start:i-1,end:i,high:prev.h,low:prev.l,bullish:false});
-    if(prev.c<prev.o && cur.c>cur.o && cur.c>prev.c) obs.push({start:i-1,end:i,high:prev.h,low:prev.l,bullish:true});
-  }
-  return obs;
-}
-function obTouchedRecently(candles, ob, lookback=50){
-  const start=Math.max(0,candles.length-lookback);
-  for(let i=start;i<candles.length;i++){ const c=candles[i]; if(c.l<=ob.high && c.h>=ob.low) return true; }
-  return false;
-}
-function detectLiquiditySweep(candles, highs, lows){
-  const n=candles.length;
-  if(highs.length>0){ const h=candles[highs[highs.length-1]].h; for(let i=Math.max(0,n-20);i<n;i++){ const c=candles[i]; if(c.h>h && c.c<h) return true; } }
-  if(lows.length>0){ const l=candles[lows[lows.length-1]].l; for(let i=Math.max(0,n-20);i<n;i++){ const c=candles[i]; if(c.l<l && c.c>l) return true; } }
-  return false;
-}
-function scoreSMC(candles, rsi=null, macdHist=null){
-  const {highs,lows}=detectSwings(candles);
-  const {bosBull,bosBear}=detectBOS(candles,highs,lows);
-  const obs=findOrderBlocks(candles);
-  const validObs = obs.filter(o=>obTouchedRecently(candles,o));
-  let score=50; let reasons=[];
-  if(bosBull){ score+=25; reasons.push("BOS bullish") }
-  if(bosBear){ score+=25; reasons.push("BOS bearish") }
-  if(validObs.length) { score+=25; reasons.push("Valid OB") }
-  if(detectLiquiditySweep(candles,highs,lows)){ score+=15; reasons.push("Liquidity sweep") }
-  if(rsi!==null && rsi<30){ score+=5; reasons.push("RSI oversold") }
-  if(macdHist!==null && macdHist>0){ score+=5; reasons.push("MACD confirm") }
-  return {score: Math.max(0, Math.min(100, Math.round(score))), explanation: reasons.join("; ")};
-}
-
-/* -------------
-   Data & history helpers
-   ------------- */
-function saveSignalToLocal(sig){
-  const arr = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  arr.unshift(sig);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr.slice(0,2000)));
-  renderSignals();
-}
-function loadHistory(){ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
-function renderSignals(){
-  const arr = loadHistory();
-  document.getElementById("histCount").innerText = arr.length;
-  const c = document.getElementById("historyList"); c.innerHTML = "";
-  for(const s of arr){
-    const el = document.createElement("div"); el.className="hist-item";
-    const left = document.createElement("div");
-    left.innerHTML = `<div><strong>${s.pair}</strong> <span class="small">${new Date(s.ts).toLocaleString()}</span></div>
-      <div class="small">${s.direction} • Conf ${s.confidence}%</div>`;
-    const right = document.createElement("div"); right.style.textAlign="right";
-    right.innerHTML = `<div><strong>${Number(s.entry).toFixed(6)}</strong></div>
-      <div class="small">${s.result||"open"} ${s.pl_usdt?("• P/L "+Number(s.pl_usdt).toFixed(2)+" USDT"):""}</div>`;
-    el.appendChild(left); el.appendChild(right); c.appendChild(el);
-  }
-  updateStats();
-}
-function exportJson(){ const data = loadHistory(); const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const url = URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="signals_history.json"; a.click(); }
-function importJsonFile(file){ const reader = new FileReader(); reader.onload = (e)=>{ try{ const json = JSON.parse(e.target.result); if(!Array.isArray(json)) throw new Error("Invalid JSON"); localStorage.setItem(STORAGE_KEY, JSON.stringify(json.concat(loadHistory()).slice(0,2000))); renderSignals(); alert("Imported."); }catch(err){ alert("Invalid file"); } }; reader.readAsText(file); }
-function clearHistory(){ if(confirm("Clear history?")){ localStorage.removeItem(STORAGE_KEY); renderSignals(); } }
-
-/* -------------
-   AI scoring helpers (explainable)
-   ------------- */
-async function fetchFearGreed(){
-  try{ const r = await fetch('https://api.alternative.me/fng/?limit=1'); const j = await r.json(); const v = j.data && j.data[0] && j.data[0].value ? parseInt(j.data[0].value) : 50; return Math.max(0,Math.min(100,v)); }catch(e){ return 50; }
-}
-function computeAIScore({ techScore, smcScore, atrFractionVal, fgVal, volChangePct }){
-  const tech = Math.max(0,Math.min(100,techScore));
-  const smc = Math.max(0,Math.min(100,smcScore));
-  const fg  = Math.max(0,Math.min(100,fgVal||50));
-  let volScore = 50;
-  if(atrFractionVal>0){ const ideal=0.015; const diff=Math.abs(atrFractionVal-ideal); volScore = Math.max(0, Math.round(100 * Math.max(0, 1 - (diff/(ideal*2))))); }
-  let volChangeScore = 50;
-  if(typeof volChangePct === 'number'){ volChangeScore = Math.max(0, Math.min(100, Math.round(50 + (volChangePct*100)/2))); }
-  const wTech=0.30, wSMC=0.25, wVol=0.15, wFG=0.10, wVolCh=0.10;
-  let raw = tech*wTech + smc*wSMC + volScore*wVol + fg*wFG + volChangeScore*wVolCh;
-  if(Math.abs(tech-smc)>40) raw -= 5;
-  const score = Math.max(0, Math.min(100, Math.round(raw)));
-  const explanation = `tech:${tech}, smc:${smc}, vol:${volScore}, fg:${fg}, volCh:${volChangeScore}`;
-  return { score, explanation };
-}
-
-/* -------------
-   Candles (CoinGecko fallback)
-   -------------
-   Returns array of {t,o,h,l,c}
-*/
-async function fetchCandlesCoinGecko(pair, days=3){
-  const map = {BTCUSDT:"bitcoin", ETHUSDT:"ethereum", BNBUSDT:"binancecoin", ADAUSDT:"cardano", XRPUSDT:"ripple", DOGEUSDT:"dogecoin", SOLUSDT:"solana", DOTUSDT:"polkadot", LTCUSDT:"litecoin", SUIUSDT:"sui", PIUSDT:"pi-network", WAVESUSDT:"waves", MATICUSDT:"matic-network", AVAXUSDT:"avalanche-2", SHIBUSDT:"shiba-inu", APTUSDT:"aptos", OPUSDT:"optimism" };
-  const coin = map[pair.toUpperCase()] || "bitcoin";
-  try{
-    const url = `https://api.coingecko.com/api/v3/coins/${coin}/market_chart?vs_currency=usd&days=${days}`;
-    const r = await fetch(url);
-    const j = await r.json();
-    const prices = j.prices || [];
-    const windowSize = Math.max(1, Math.floor(prices.length/240));
-    const out=[];
-    for(let i=0;i<prices.length;i+=windowSize){
-      const slice = prices.slice(i,i+windowSize);
-      if(!slice.length) continue;
-      const o = slice[0][1], c = slice[slice.length-1][1], h = Math.max(...slice.map(x=>x[1])), l = Math.min(...slice.map(x=>x[1])), t = slice[0][0];
-      out.push({t,o,h,l,c});
-    }
-    return out;
-  }catch(e){ console.error("cg err",e); return []; }
-}
-
-/* -------------
-   Price fetchers & websockets
-   ------------- */
-function stopPolling(){ if(pollingTimer) clearInterval(pollingTimer); pollingTimer=null; }
-function startPolling(exchange, symbol){ stopPolling(); pollingTimer = setInterval(()=>fetchPriceREST(exchange, symbol), pollingInterval); fetchPriceREST(exchange, symbol); }
-async function fetchPriceREST(exchange, symbol){
-  try{
-    symbol = symbol.replace("/","").toUpperCase();
-    let url=null;
-    if(exchange==="bybit") url = `https://api.bybit.com/v2/public/tickers?symbol=${symbol}`;
-    else if(exchange==="kucoin") url = `https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=${symbol}`;
-    else if(exchange==="okx") url = `https://www.okx.com/api/v5/market/ticker?instId=${symbol}-USDT`;
-    else if(exchange==="gate") url = `https://api.gateio.ws/api/v4/spot/tickers?currency_pair=${symbol}`;
-    else url = `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`;
-    if(!url) return;
-    const r = await fetch(url);
-    const j = await r.json();
-    let price = null;
-    if(exchange==="bybit"){ if(j && j.result && j.result.length) price = parseFloat(j.result[0].last_price) || parseFloat(j.result[0].lastPrice); }
-    else if(exchange==="kucoin"){ if(j && j.data && j.data.price) price = parseFloat(j.data.price); }
-    else if(exchange==="okx"){ if(j && j.data && j.data[0] && j.data[0].last) price = parseFloat(j.data[0].last) || parseFloat(j.data[0].last()); else if(j && j.data && j.data.last) price = parseFloat(j.data.last); }
-    else if(exchange==="gate"){ if(Array.isArray(j) && j.length) price = parseFloat(j[0].last); else if(j && j.last) price = parseFloat(j.last); }
-    else { if(j && j.price) price = parseFloat(j.price); else if(j && j.lastPrice) price = parseFloat(j.lastPrice); }
-    if(price) showPrice(price);
-  }catch(e){ console.warn("REST price err",e); }
-}
-
-function connectBinanceWS(symbol){
-  try{ if(ws){ ws.close(); ws=null; } }catch(e){}
-  const stream = `${symbol.replace("/","").toLowerCase()}@trade`;
-  const url = `wss://stream.binance.com:9443/ws/${stream}`;
-  ws = new WebSocket(url);
-  ws.onopen = ()=>{ document.getElementById("priceTime").innerText = "connected"; };
-  ws.onmessage = (ev)=>{ try{ const obj = JSON.parse(ev.data); const p = parseFloat(obj.p); const ts = obj.E || Date.now(); showPrice(p, ts); }catch(e){ console.error(e); } };
-  ws.onclose = ()=>{ document.getElementById("priceTime").innerText = "ws closed"; };
-  ws.onerror = (e)=>{ document.getElementById("priceTime").innerText = "ws error"; console.error("ws err",e); };
-}
-
-/* -------------
-   Advanced generator (agreed parameters)
-   ------------- */
-async function generateAdvancedSignal(){
-  const exchange = document.getElementById("exchangeSelect").value;
-  const pair = document.getElementById("pairSelect").value;
-  const symbol = pairsMap[pair] || pair.replace("/","").toUpperCase();
-  if(!latestPrice || latestPrice===0){ alert("Waiting for live price — click Subscribe"); return; }
-
-  const balance = Number(document.getElementById("acctBalance").value || 50);
-  const leverage = Number(document.getElementById("leverage").value || 5);
-  const riskPct = Number(document.getElementById("riskPct").value || 1.5);
-  const binanceMode = document.getElementById("binanceMode").checked || (exchange==="binance");
-
-  // candles
-  const candles = await fetchCandlesCoinGecko(symbol, 3);
-  if(!candles.length){ alert("No candles (CoinGecko) — try again"); return; }
-
-  const closes = candles.map(c=>c.c);
-  const emaShort = ema(closes,12), emaLong = ema(closes,26);
-  const macdHist = emaShort-emaLong;
-  const rsiVal = rsi(closes,14);
-  const atrF = atrFraction(candles,14);
-
-  // SMC
-  const smcObj = scoreSMC(candles, rsiVal, macdHist);
-  const smcScore = smcObj.score;
-
-  // tech score
-  let techScore = 50;
-  techScore += (emaShort>emaLong ? 12 : -8);
-  techScore += (macdHist>0 ? 10 : -8);
-  techScore += (rsiVal<30 ? 6 : (rsiVal>70 ? -6 : 0));
-  techScore = Math.max(0,Math.min(100,Math.round(techScore)));
-
-  // vol-change proxy
-  let volChangePct=0;
-  try{ const last = closes[closes.length-1]; const prev = closes[Math.max(0,closes.length-4)]; volChangePct = prev?((last-prev)/prev):0; }catch(e){volChangePct=0;}
-
-  // fear & greed
-  const fgVal = await fetchFearGreed();
-
-  // ai score
-  const { score: aiScore, explanation: aiExplain } = computeAIScore({ techScore, smcScore, atrFractionVal:atrF, fgVal, volChangePct });
-
-  // direction
-  const direction = (macdHist>0 && emaShort>emaLong) ? "LONG" : "SHORT";
-
-  // last swing low/high
-  let lastLow=null, lastHigh=null;
-  for(let i=candles.length-4;i>=3;i--){
-    if(!lastLow && candles[i].l < candles[i-1].l && candles[i].l < candles[i-2].l && candles[i].l < candles[i+1].l && candles[i].l < candles[i+2].l) lastLow = candles[i].l;
-    if(!lastHigh && candles[i].h > candles[i-1].h && candles[i].h > candles[i-2].h && candles[i].h > candles[i+1].h && candles[i].h > candles[i+2].h) lastHigh = candles[i].h;
-  }
-
-  const entry = latestPrice;
-  let sl;
-  if(direction==="LONG"){
-    if(lastLow) sl = lastLow * 0.997; else sl = entry * (1 - Math.max(0.01, atrF*1.5));
-    if(sl >= entry) sl = entry * 0.99;
-  } else {
-    if(lastHigh) sl = lastHigh * 1.003; else sl = entry * (1 + Math.max(0.01, atrF*1.5));
-    if(sl <= entry) sl = entry * 1.01;
-  }
-
-  // multi-TP
-  const baseStep = Math.max((atrF || 0.01) * 0.9, 0.0025);
-  const tpCount = 6;
-  const tps = [];
-  for(let i=1;i<=tpCount;i++){
-    const mult = 1 + (direction==="LONG"?1:-1) * (i * baseStep * (1 + i*0.12));
-    tps.push(entry * mult);
-  }
-  const finalTPs = binanceMode ? [tps[0]] : tps;
-
-  // position sizing (SMM)
-  const riskAmount = balance * (riskPct/100);
-  const perUnitRisk = Math.abs(entry - sl);
-  let qty = perUnitRisk>0 ? (riskAmount / perUnitRisk) : 0;
-  let notional = qty * entry;
-  let margin = leverage>0 ? (notional / leverage) : notional;
-  if(margin > balance && notional>0){
-    const scale = (balance * leverage) / notional;
-    qty = qty * scale;
-    notional = qty * entry;
-    margin = leverage>0 ? notional / leverage : notional;
-  }
-
-  // build signal
-  const signal = {
-    pair, exchange, direction, entry: Number(entry), tp: finalTPs.map(x=>Number(x)), sl: Number(sl),
-    ai_score: aiScore, ai_explanation: aiExplain, tech_score: techScore, smc_score: smcScore,
-    confidence: Math.round((aiScore*0.7 + techScore*0.2 + smcScore*0.1)),
-    atr_fraction: Number(atrF.toFixed(6)), vol_change_pct: Number(volChangePct.toFixed(6)), fg_index: fgVal,
-    balance, leverage, risk_pct: riskPct, qty: Number(qty||0), margin: Number(margin||0), ts: Date.now(), result:"open"
-  };
-
-  // display
-  document.getElementById("signalCard").style.display="block";
-  document.getElementById("sigPair").innerText = `${signal.pair} • ${signal.exchange}`;
-  document.getElementById("sigDir").innerText = signal.direction;
-  document.getElementById("sigEntry").innerText = signal.entry.toFixed(6);
-  document.getElementById("sigSL").innerText = signal.sl.toFixed(6);
-  document.getElementById("aiScore").innerText = signal.ai_score;
-  document.getElementById("techScore").innerText = signal.tech_score;
-  document.getElementById("smcScore").innerText = signal.smc_score;
-  document.getElementById("atrVal").innerText = signal.atr_fraction;
-  document.getElementById("sigConf").innerText = signal.confidence;
-  document.getElementById("sigExplain").innerText = `AI: ${signal.ai_explanation} • SMC: ${smcObj.explanation}`;
-
-  const tpGrid = document.getElementById("sigTPs"); tpGrid.innerHTML="";
-  signal.tp.forEach((t,i)=>{ const d = document.createElement("div"); const pct = ((t - signal.entry)/signal.entry*100).toFixed(2); d.innerHTML = `<strong>TP${i+1}</strong> ${t.toFixed(6)} <span class="small">(${pct}%)</span>`; tpGrid.appendChild(d); });
-
-  // keep preview
-  window.previewSignal = signal;
-}
-
-/* -------------
-   Wiring: UI buttons
-   ------------- */
-document.getElementById("subscribeBtn").addEventListener("click", ()=>{
-  const exchange = document.getElementById("exchangeSelect").value;
-  const pair = document.getElementById("pairSelect").value;
-  document.getElementById("pairTitle").innerText = `${pair} • ${exchange}`;
-  const symbol = pairsMap[pair] || pair.replace("/","").toUpperCase();
-  if(exchange==="binance"){ try{ if(ws) { ws.close(); ws=null; } }catch(e){} connectBinanceWS(symbol); stopPolling(); }
-  else { if(ws){ try{ ws.close(); ws=null; }catch(e){} } startPolling(exchange, symbol); }
-  fetchFearGreed().then(v=>document.getElementById("fg").innerText=v).catch(()=>document.getElementById("fg").innerText="n/a");
-});
-
-document.getElementById("genAdvancedBtn").addEventListener("click", ()=> generateAdvancedSignal());
-document.getElementById("genBasicBtn").addEventListener("click", ()=>{
-  if(!latestPrice) return alert("Wait for price");
-  const e = latestPrice; const sl = e * 0.99; const tp = e * 1.02;
-  const quick = { pair: document.getElementById("pairSelect").value, exchange: document.getElementById("exchangeSelect").value, direction:"LONG", entry:e, tp:[tp], sl, ai_score:50, tech_score:45, smc_score:40, confidence:50, ts:Date.now(), balance:Number(document.getElementById("acctBalance").value||50), leverage:Number(document.getElementById("leverage").value||5) };
-  saveSignalToLocal(quick); alert("Quick signal saved");
-});
-
-document.getElementById("saveSigBtn").addEventListener("click", ()=>{ if(!window.previewSignal) return alert("No signal"); saveSignalToLocal(window.previewSignal); alert("Saved to history"); });
-document.getElementById("markTPBtn").addEventListener("click", ()=>{ const arr = loadHistory(); if(!arr.length) return alert("No saved signals"); const s = arr[0]; if(!s.tp || !s.tp[0]) return alert("No TP"); const pl = ((s.tp[0]-s.entry)*(s.qty||1))*(s.direction==="LONG"?1:-1); s.result="win"; s.pl_usdt = Number(pl.toFixed(4)); arr[0]=s; localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); renderSignals(); });
-document.getElementById("markSLBtn").addEventListener("click", ()=>{ const arr = loadHistory(); if(!arr.length) return alert("No saved signals"); const s = arr[0]; const pl = ((s.sl - s.entry)*(s.qty||1))*(s.direction==="LONG"?1:-1); s.result="loss"; s.pl_usdt = Number(pl.toFixed(4)); arr[0]=s; localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); renderSignals(); });
-
-document.getElementById("exportJson").addEventListener("click", exportJson);
-document.getElementById("clearHist").addEventListener("click", clearHistory);
-document.getElementById("importJsonBtn").addEventListener("click", ()=>{ const inp=document.createElement("input"); inp.type="file"; inp.accept=".json"; inp.onchange=()=>{ const f = inp.files[0]; if(f) importJsonFile(f); }; inp.click(); });
-
-/* -------------
-   Stats
-   ------------- */
-function updateStats(){
-  const hist = loadHistory();
-  const now = Date.now();
-  const oneWeek = now - 7*24*60*60*1000;
-  const filtered = hist.filter(h=>h.ts>=oneWeek);
-  const total = filtered.length;
-  const wins = filtered.filter(s=>s.result==="win").length;
-  const losses = filtered.filter(s=>s.result==="loss").length;
-  const wr = total? Math.round((wins/total)*100):0;
-  const totalPL = filtered.reduce((acc,s)=> acc + (s.pl_usdt || 0), 0);
-  document.getElementById("statTotal").innerText = total;
-  document.getElementById("statWins").innerText = wins;
-  document.getElementById("statLoss").innerText = losses;
-  document.getElementById("statWR").innerText = wr + "%";
-  document.getElementById("statPL").innerText = totalPL.toFixed(2);
-}
-
-/* -------------
-   Init & PWA register
-   ------------- */
-(function init(){
-  // load presets into history so user sees them (optional)
-  const existing = loadHistory();
-  if(existing.length===0 && PRESET_SIGNALS && PRESET_SIGNALS.length){
-    const now = Date.now();
-    const mapped = PRESET_SIGNALS.map(s=>({...s, ts: now, result:"open"}));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
-  }
-  renderSignals();
-
-  // default subscribe to first pair (Binance)
-  const defaultPair = document.getElementById("pairSelect").value;
-  document.getElementById("pairTitle").innerText = `${defaultPair} • Binance`;
-  connectBinanceWS(pairsMap[defaultPair] || defaultPair.replace("/","").toLowerCase());
-
-  fetchFearGreed().then(v=>document.getElementById("fg").innerText=v).catch(()=>document.getElementById("fg").innerText="n/a");
-  setInterval(()=>fetchFearGreed().then(v=>document.getElementById("fg").innerText=v).catch(()=>{}), 30*60*1000);
-})();
-
-// register service worker if present
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./service-worker.js').then(()=>console.log("sw registered")).catch((e)=>console.warn("sw failed",e));
-}
-
-</script>
+  <script src="script.js"></script>
 </body>
 </html>
