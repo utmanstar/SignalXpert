@@ -1,5 +1,5 @@
 // ======= CONFIG =======
-const SHEET_CSV_URL = "PASTE_YOUR_PUBLISHED_SHEET_CSV_URL_HERE"; // e.g. https://docs.google.com/spreadsheets/d/e/.../pub?output=csv
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBjaZWQ-2JfBXszuwznfNXUicbPDyotldYXhnvj4AJXQdfOASPOOKjyl3g2Dg4oXQz1lnQH3OUN70B/pub?output=csv"; // e.g. https://docs.google.com/spreadsheets/d/e/.../pub?output=csv
 const DEFAULT_EXCHANGE = "binance"; // binance | binance-futures
 const REFRESH_MS = 30_000; // auto-refresh signals
 // ======================
